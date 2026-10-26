@@ -44,7 +44,7 @@ print(result.posterior_mean[:2].round(4))
 This constructed example favors a shared-effect pattern. Its intervals and sign
 probabilities condition on the fitted patterns and mixture weights.
 
-![Posterior summaries for constructed inputs](docs/figures/posterior-summary.png)
+![Posterior summaries for constructed inputs](https://raw.githubusercontent.com/nilson01/jointshrink/main/docs/figures/posterior-summary.png)
 
 ## Choose an analysis
 
@@ -68,11 +68,11 @@ ordinal thresholds and Weibull shape are supplied and held fixed.
 
 [Documentation website](https://nilson01.github.io/jointshrink/)
 
-- [Installation](docs/installation.md), [tutorials](docs/tutorials.md) and [grouped API](docs/api.md).
-- [Methods and limits](docs/methods.md), [numerical reference checks](docs/reference-checks.md).
-- [Reference manual](docs/manual/reference.md) ([PDF](docs/manual/jointshrink-reference.pdf)).
+- [Installation](https://nilson01.github.io/jointshrink/installation/), [tutorials](https://nilson01.github.io/jointshrink/tutorials/) and [grouped API](https://nilson01.github.io/jointshrink/api/).
+- [Methods and limits](https://nilson01.github.io/jointshrink/methods/), [numerical reference checks](https://nilson01.github.io/jointshrink/reference-checks/).
+- [Reference manual](https://nilson01.github.io/jointshrink/manual/reference/) ([PDF](https://nilson01.github.io/jointshrink/manual/jointshrink-reference.pdf)).
 
 Cite the method paper and record the JointShrink version used.
-[Numerical comparisons](docs/reference-checks.md) describe the checked cases
+[Numerical comparisons](https://nilson01.github.io/jointshrink/reference-checks/) describe the checked cases
 and their limits.
-See [NOTICE](NOTICE.md) and [LICENSE](LICENSE) for credit and license terms.
+See [NOTICE](https://github.com/nilson01/jointshrink/blob/main/NOTICE.md) and [LICENSE](https://github.com/nilson01/jointshrink/blob/main/LICENSE) for credit and license terms.

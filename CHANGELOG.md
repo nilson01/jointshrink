@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0.dev0
+## 0.1.0
 
 - Joint Gaussian shrinkage with canonical, supplied and learned covariance patterns.
 - EE/EZ scales, correlated errors and exact observed-block missing-condition inference.

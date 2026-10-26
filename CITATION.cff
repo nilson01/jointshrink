@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: Please cite the method paper and record the JointShrink version used.
 title: 'JointShrink: Joint shrinkage for effect summaries and regression'
 type: software
-version: 0.1.0.dev0
+version: 0.1.0
 authors:
   - family-names: Chapagain
     given-names: Nilson

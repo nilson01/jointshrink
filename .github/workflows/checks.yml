@@ -62,7 +62,7 @@ jobs:
           print(json.dumps(receipt))
           subprocess.run([sys.executable, '-m', 'pytest', '-q', 'tests', '--junitxml=results.xml'], check=True)
           suites = ET.parse('results.xml').getroot().findall('testsuite')
-          assert sum(int(s.attrib['tests']) for s in suites) >= 323
+          assert sum(int(s.attrib['tests']) for s in suites) >= 333
           assert all(int(s.attrib.get(k, 0)) == 0 for s in suites for k in ('errors', 'failures', 'skipped'))
       - name: Save installed-check evidence
         if: always()
