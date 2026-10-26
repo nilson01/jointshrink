@@ -23,7 +23,7 @@ nav:
   - Start here: index.md
   - Installation: installation.md
   - Tutorials: tutorials.md
-  - API by task: api.md
+  - API reference: api.md
   - Methods and limits: methods.md
   - Numerical reference checks: reference-checks.md
   - Reference manual:

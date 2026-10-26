@@ -43,7 +43,7 @@ python -m pip install ".[plot,table]"
 
 NumPy and SciPy are required. Plots require Matplotlib; `to_dataframe()` requires pandas. Analysis does not require R.
 
-## Import and fit
+## Gaussian example
 
 ```python
 from jointshrink import set_data, fit
@@ -53,9 +53,9 @@ result = fit(data, scales=[0.25, 0.5, 1.0, 2.0])
 print(result.format_summary())
 ```
 
-# Tutorials
+# Worked examples
 
-## Fit supplied patterns
+## Gaussian fitting with specified covariance patterns
 
 Each row contains estimates of one effect across conditions; columns identify conditions. The following values are constructed examples.
 
@@ -77,7 +77,7 @@ print(result.interval(level=0.95))
 
 `posterior_mean` estimates each effect after shrinkage. `interval()` returns equal-tailed marginal credible intervals. Both condition on the fitted covariance patterns and mixture weights. Check `result.diagnostics["converged"]` before interpreting a fit.
 
-## Learn sharing patterns
+## Covariance-pattern estimation
 
 Strong rows help identify covariance patterns. Final mixture weights should instead use all rows or a representative training sample, because strong rows overrepresent large effects ([Urbut et al., 2019](https://doi.org/10.1038/s41588-018-0268-8)).
 
@@ -95,7 +95,7 @@ print(learned.diagnostics["reason"])
 
 Adding `0.1` makes this example's starting matrix positive definite; it is not a package default. Inspect the likelihood trace and stopping reason because covariance learning can reach a local optimum or its iteration limit.
 
-## Compare conditions
+## Contrasts and effect sharing
 
 ```python
 contrast = result.contrast([[1, -1]], names=["A minus B"])
@@ -108,7 +108,7 @@ print(sharing["denominator"])
 
 The contrast uses the joint posterior covariance. Magnitude sharing requires equal nonzero signs and posterior means within a factor of two. Each denominator counts rows with a selected error rate below the threshold in either condition. This proportion describes the fitted posterior means; it is not a posterior probability of sharing.
 
-## Reuse a prior
+## Posterior inference with a fitted prior
 
 ```python
 from jointshrink import fit_prior, save_prior, load_prior
@@ -125,7 +125,7 @@ for batch in restored.iter_apply(new_data, batch_size=128):
 
 A missing effect estimate uses `NaN`; its standard error must still be finite and positive. The likelihood uses only the observed estimates and their sampling-covariance submatrix. The unobserved effect is inferred from the fitted prior and the observed effects. Retain the same condition order and EE/EZ scale; reuse holds patterns and weights fixed.
 
-## Fit native Student-t errors
+## Student-t summary models
 
 ```python
 from jointshrink import set_data, fit_student_t
@@ -138,7 +138,7 @@ print(result_t.diagnostics["quadrature_converged"])
 
 Here `0.5` is the square root of the Student-$t$ scale diagonal, not the error SD. The [native Student-t model](#native-student-t-summary-model) explains the distinction.
 
-## Fit outcomes and predictors
+## Binomial regression
 
 ```python
 import numpy as np
@@ -152,9 +152,9 @@ print(regression.diagnostics["split_rhat"])
 probability = regression.predict(X, scale="probability")
 ```
 
-This constructed binary example has one predictor and an intercept. The result contains posterior draws; inspect the [sampling diagnostics](#sampling-and-diagnostics) before interpretation. An estimated success probability differs from a sampled future binary outcome.
+This constructed binary example has one predictor and an intercept. The result contains posterior draws; inspect the [sampling diagnostics](#posterior-sampling-and-convergence-diagnostics) before interpretation. An estimated success probability differs from a sampled future binary outcome.
 
-## Plot and export
+## Plotting and result export
 
 ```python
 from jointshrink import plot_intervals, plot_sharing
@@ -181,7 +181,7 @@ Both models use the same fixed prior and error covariance. For Student-$t_4$ err
 
 Each fit uses eight constructed observations, one predictor and two chains with 500 retained draws after 300 warmup iterations. Bands describe uncertainty in a conditional mean or survival probability, not future-outcome intervals. Gaussian residual SD is $0.4$, binomial trials are 8, Poisson exposure is 2, and Weibull shape is 1.3. [Inputs](../figures/extension-regression-inputs.csv) and [predictions](../figures/extension-regression-predictions.csv) retain the plotted values.
 
-# Methods and limits
+# Statistical models and inference
 
 ## Gaussian summary model
 
@@ -213,7 +213,7 @@ With supplied standard errors and error correlation $C$, the model uses $V_j=S_j
 
 Missing effect estimates use `NaN`. Their standard errors remain required, including under EZ, to define the output scale. Likelihoods use observed-condition blocks of $V_j$; posterior inference can include unobserved conditions. This does not correct informative missingness. PCA and extreme-deconvolution learning require complete selected rows.
 
-## Covariance learning and scales
+## Covariance patterns and scale grids
 
 Canonical patterns describe effects that, within a Gaussian component, are uncorrelated, nonzero in one condition, equal across conditions, or positively correlated. A mixture of diagonal-covariance components need not make the effects marginally independent. Principal component analysis (PCA) supplies candidate directions from strong rows. Its default uses an uncentered singular value decomposition (SVD) of working effect estimates, following the R helper. Centered Z-score PCA requires `alpha=1` and `center=True`.
 
@@ -221,7 +221,7 @@ Extreme deconvolution fits a zero-mean Gaussian mixture while accounting for obs
 
 Patterns are normalized by their largest diagonal entry unless `normalize=False`. Python `scales` contains standard-deviation multipliers: their squares are the paper's covariance multipliers $\omega_l$. The automatic grid spans small working standard errors through the largest observed working effect. Use an explicit grid when matching another implementation.
 
-## Mixture fitting and uncertainty
+## Mixture-weight estimation and posterior uncertainty
 
 `fit_prior` estimates mixture weights using the supplied rows. `null_weight=1` uses maximum likelihood; larger values add a log-weight penalty favoring the global-null component. A penalized fit requires that component. Inspect the convergence flag, objective trace and Karush–Kuhn–Tucker (KKT) residual in the fitted diagnostics. A small KKT residual checks the weight-optimization conditions, not the observation model.
 
@@ -236,7 +236,7 @@ $$
 
 The local false sign rate includes zero mass in either possible sign error. `lfdr` is the marginal posterior probability of an exact zero. `joint_null_probability` concerns the entire row being zero. The displayed probabilities hold fitted prior parameters fixed. These probabilities depend on the observation model and fitted prior.
 
-## Memory and supported workflow
+## Memory management
 
 A full result stores component-specific posterior covariance matrices. Storage therefore grows with rows × components × conditions squared. The kernel rejects a posterior-component allocation above 256 MiB; total process memory can be higher. Use `fit_prior` for weight fitting and `prior.iter_apply(data, batch_size=...)` for ordered posterior batches. Scoring and prior fitting use likelihood-only calculations. Reduce the batch size when the number of conditions or components is large.
 
@@ -258,7 +258,7 @@ For this route, `error_covariance` supplies $V_j$, and `standard_errors` supplie
 
 Integration over log precision produces a finite Gaussian-mixture approximation to the posterior. Increasing quadrature orders checks marginal log densities, first and second posterior moments, and CDFs at zero. Inspect `quadrature_converged` and `quadrature_relative_change`; an unmet tolerance produces a warning. These checks are not rigorous error bounds for every posterior quantile. Uncertainty remains conditional on supplied $V_j,\nu_j$ and fitted prior parameters.
 
-## Direct regression model
+## Regression models
 
 Direct regression starts from outcomes, rather than estimates from an earlier analysis. Let $X$ contain $n$ observations and $p$ predictors, and let $D$ be the number of linear predictors needed by the likelihood. Each coefficient row $B_j\in\mathbb R^D$ has the same mixture prior. The covariance components describe relationships among its $D$ linear-predictor coefficients; mixture weights are shared across the $p$ predictor rows:
 
@@ -279,7 +279,7 @@ $$
 
 Group terms are absent when `groups=None`. Intercepts have independent $N(0,5^2)$ priors; Cox models omit them. Inputs are not standardized automatically, so predictor and response units affect these priors. Use the same predictor order and preprocessing for fitting and prediction. Constant or aliased predictors can prevent separate coefficients from being identified by the likelihood, even with proper priors.
 
-### Outcomes and links
+### Outcome distributions and link functions
 
 Except for the single categorical or survival outcome, `y` can have shape `(n,R)`. Its columns are conditionally independent given their predictors and group effects. Shared coefficient or group priors do not provide a general residual covariance model. Missing raw outcomes and predictors are rejected.
 
@@ -298,7 +298,7 @@ Let $\mathrm{logit}^{-1}(x)=1/(1+e^{-x})$. For the negative binomial, NB2 denote
 
 Categorical models infer the category count from observed codes unless `n_categories` is supplied. Supply it when unobserved categories must be retained. Ordinal default thresholds are the logits of $1/K,\ldots,(K-1)/K$; they are not estimated. Increasing the ordinal predictor shifts mass toward larger category codes. This cumulative-link convention is described in the [statsmodels ordered-model reference](https://www.statsmodels.org/stable/generated/statsmodels.miscmodels.ordinal_model.OrderedModel.html).
 
-### Excess-zero counts
+### Zero-inflated and hurdle models
 
 `zero_inflated_poisson`, `zero_inflated_negative_binomial`, `hurdle_poisson` and `hurdle_negative_binomial` use $2R$ linear predictors: count predictors first, then zero-probability logits. Write $\rho_{ir}$ for the inverse-logit of the second predictor and $f(y;\mu,\phi)$ for the Poisson or NB2 mass.
 
@@ -313,9 +313,11 @@ $$
 
 Thus the zero-inflated mean is $(1-\rho)\mu$, while the hurdle mean is $(1-\rho)\mu/[1-f(0)]$. The zero logit has the same direction in both models: larger values increase zero probability. By default these fits use an identity covariance pattern for coefficients across the count and zero predictors; supplied patterns may express a chosen relationship.
 
-### Survival and group effects
+### Survival models
 
 Both survival families support right censoring and delayed entry with `0 <= entry < time`. The Cox risk set at event time $t$ uses $\mathrm{entry}_i<t\leq\mathrm{time}_i$, with Breslow handling of tied events. The coefficient posterior is proportional to the Cox partial likelihood times the specified priors; it does not come from a full event-time likelihood. Survival inference requires non-informative censoring conditional on the modeled predictors and group effects, and appropriate adjustment for delayed entry. Absolute survival uses a draw-specific Breslow baseline estimated from the training data; it propagates coefficient uncertainty but does not integrate separate baseline uncertainty. No-event data cannot supply an absolute baseline. [The statsmodels PHReg reference](https://www.statsmodels.org/stable/generated/statsmodels.duration.hazard_regression.PHReg.html) describes the corresponding right-censoring, entry and ties conventions. Weibull absolute survival instead depends on the supplied shape and parametric baseline. Competing risks, interval censoring and time-varying covariates are not included.
+
+### Gaussian random effects
 
 `groups` supplies one nonempty string label per observation. Without `random_design`, each group has a random intercept. A supplied `(n,Q)` design allows random slopes. Flattening each group's `(Q,D)` effects in row order gives
 
@@ -325,17 +327,17 @@ $$
 
 `random_covariance` supplies the fixed positive-definite shape matrix $A$ of dimension `(Q*D,Q*D)`. The default is identity. `random_scale` supplies the common multiplier $\tau$; marginal group-effect SDs also depend on the diagonal of $A$. With `estimate_random_scale=True`, it sets the initial value and $\tau^2$ has an inverse-gamma prior with shape 2 and scale 1. Otherwise it stays fixed. This estimates one common scale, not an unrestricted random-effect covariance or general within-group residual correlation.
 
-### Sampling and diagnostics
+### Posterior sampling and convergence diagnostics
 
 Regression uses Markov chain Monte Carlo (MCMC). It combines joint component/coefficient proposals from the current prior, elliptical slice updates within Gaussian components, and Dirichlet updates for mixture weights. Elliptical slice sampling follows [Murray, Adams and MacKay (2010)](https://proceedings.mlr.press/v9/murray10a.html). Component-changing proposals allow transitions between zero, singular and full-rank prior components. A failed slice-bracket search raises an error rather than accepting an approximate update.
 
 Inspect coefficient traces, `split_rhat`, `effective_sample_size`, `constant_coordinates`, `prior_proposal_acceptance` and `component_switches`. The effective sample size is an autocorrelation estimate, not a rank-normalized bulk effective sample size. Constant coordinates have undefined diagnostics; a chain stuck at zero is not evidence of convergence. The coefficient diagnostics do not certify mixing for every group effect or mixture weight. Successful execution and multiple chains do not establish convergence or calibration.
 
-# API by task
+# API reference
 
 All functions below are imported from `jointshrink`. Summary arrays use effects × conditions, with `(n,d)` denoting rows × conditions in API shapes. Regression uses observations × predictors; $D$ denotes its number of linear predictors.
 
-## Data
+## Summary-statistic inputs
 
 ```text
 set_data(effects, standard_errors=1, *, correlation=None,
@@ -361,7 +363,7 @@ Returns `MashData`. `effects` has shape `(rows, conditions)` with at least two c
 
 `CovarianceFit` exposes `covariances`, `weights` and `diagnostics`. Its likelihood history and stopping reason distinguish convergence from an iteration limit or rejected proposal. `CorrelationEstimate` exposes `correlation`, selected `row_indices` and `diagnostics`.
 
-## Fit and reuse
+## Gaussian fitting and prior reuse
 
 ```text
 fit_prior(data, covariances=None, *, scales=None, normalize=True,
@@ -410,7 +412,7 @@ A reused prior requires the same condition order, number of conditions and EE/EZ
 
 `MashResult.shrink(data)` reuses its prior. `score_samples(data)` evaluates new rows. Uncertainty conditions on the fitted patterns and weights.
 
-## Native Student-t fitting
+## Student-t fitting
 
 ```text
 fit_student_t(data, df, covariances=None, *, scales=None, normalize=True,
@@ -425,7 +427,7 @@ apply_student_prior(data, prior, df, *, quadrature_order=64,
 
 `StudentTResult` inherits the posterior methods above and adds `data`, `prior`, `df`, `log_likelihood` and diagnostics. Its Gaussian-mixture effect prior can be saved independently. Use `result.shrink(new_data, df=...)` for native $t$ reuse; `prior.apply` would use a Gaussian likelihood. Quadrature nodes increase the number of stored posterior components, so fewer rows or patterns may be needed within the 256 MiB component guard.
 
-## Direct regression fitting
+## Regression fitting
 
 ```text
 fit_regression(X, y, *, family="gaussian", covariances=None,
@@ -485,7 +487,7 @@ Known `groups` use their retained group effects. With `groups=None`, the group e
 
 Cox survival accepts a scalar or vector of times, returning `(new_rows,times)`, and estimates the Breslow baseline separately for each retained coefficient draw. Its intervals still omit separate baseline uncertainty. Cox future event-time draws are unavailable. Weibull survival instead accepts scalar or per-row times. Weibull future-time draws are uncensored event times; a censoring process is not generated.
 
-## Plots
+## Plotting functions
 
 | Function | Display |
 | --- | --- |
@@ -500,7 +502,7 @@ For direct regression, `plot_coefficients(result, *, condition=0, level=0.95, ax
 
 Plots require Matplotlib and return axes. They do not change global style or save files automatically.
 
-## Save and load
+## Data and result persistence
 
 ```text
 save_data(data, path, *, overwrite=False)
@@ -521,7 +523,7 @@ The reference checker compares the Gaussian workflow with installed R [`mashr`](
 
 The reference export records package versions and library origin. The checker uses absolute and relative tolerances of `2e-10` for fixed-prior cases and `2e-5` for fitted-weight cases. PCA matrices use `1e-12`. See `tools/export_mashr_reference.R` and `tools/check_mashr_reference.py` in the repository.
 
-## Differences and limits
+## Reference conventions and comparison limits
 
 | Area | Interpretation |
 | --- | --- |
@@ -533,7 +535,7 @@ The reference export records package versions and library origin. The checker us
 
 R `mashr` finite-degrees-of-freedom inputs use normal-score conversion. JointShrink's native $t$ likelihood and direct-regression extensions are separate methods; the Gaussian R comparisons do not validate them. Independent finite-case checks cover $t$ convolution, outcome densities and masses, Cox partial likelihood, analytic regression posteriors and prediction behavior. Repeated-dataset coverage, general sampler mixing and full paper reproduction are not established by those checks.
 
-# Common questions
+# Frequently asked questions
 
 ## Does analysis require R?
 

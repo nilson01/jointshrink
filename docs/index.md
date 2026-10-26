@@ -12,7 +12,7 @@ outcome-regression extensions.
 | Heavy-tailed summary errors | [Student-t summaries](tutorials.md#fit-student-t-summary-errors) |
 | Learn shared patterns | [Covariance learning](tutorials.md#learn-sharing-patterns) |
 | Outcomes and predictors | [Direct regression](tutorials.md#fit-outcomes-and-predictors) |
-| Event times, categories or excess zeros | [Regression families](api.md#direct-outcome-regression) |
+| Event times, categories or excess zeros | [Regression families](api.md#regression-fitting) |
 | Missing summary conditions or larger inputs | [Prior reuse and batches](tutorials.md#reuse-a-prior) |
 | Function arguments and result methods | [Grouped API](api.md) |
 

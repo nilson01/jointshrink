@@ -1,8 +1,8 @@
-# API by analysis
+# API reference
 
 All entry points are imported from `jointshrink`. Summary inputs use rows for effects and columns for conditions. Direct regression uses observations × predictors and numeric outcomes.
 
-## Summary data
+## Summary-statistic inputs
 
 ```text
 set_data(effects, standard_errors=1, *, correlation=None,
@@ -28,7 +28,7 @@ Returns `MashData`. `effects` has shape `(rows, conditions)` with at least two c
 
 `CovarianceFit` exposes `covariances`, `weights` and `diagnostics`. Its likelihood history and stopping reason distinguish convergence from an iteration limit or rejected proposal. `CorrelationEstimate` exposes `correlation`, selected `row_indices` and `diagnostics`.
 
-## Gaussian summary fitting and reuse
+## Gaussian fitting and prior reuse
 
 ```text
 fit_prior(data, covariances=None, *, scales=None, normalize=True,
@@ -48,7 +48,7 @@ Both functions fit mixture weights on all supplied rows. Omitted patterns use ca
 
 A reused prior requires the same condition order, number of conditions and EE/EZ scale. Stored prior covariances are already expanded; reuse does not apply a second scale grid.
 
-## Summary posterior results
+## Posterior distributions and summaries
 
 `MashResult` extends `PosteriorResult` with `prior`, `data`, `diagnostics`, per-row `log_likelihood`, and `log_bayes_factor`. The Bayes factor compares the fitted nonnull mixture, renormalized to nonnull weight one, against the global null. A result with no nonnull prior weight has log Bayes factor `-inf`.
 
@@ -77,7 +77,7 @@ A reused prior requires the same condition order, number of conditions and EE/EZ
 
 `MashResult.shrink(data)` reuses its prior. `score_samples(data)` evaluates new rows. Uncertainty conditions on the fitted patterns and weights.
 
-## Summary plots
+## Summary-statistic plotting functions
 
 | Function | Display |
 | --- | --- |
@@ -90,7 +90,7 @@ A reused prior requires the same condition order, number of conditions and EE/EZ
 
 Plots require Matplotlib and return axes. They do not change global style or save files automatically.
 
-## Save and load
+## Data and result persistence
 
 ```text
 save_data(data, path, *, overwrite=False)
@@ -127,7 +127,7 @@ without refitting weights. Generic `save_result`/`load_result` also preserve
 the likelihood. `prior.apply(data)` remains a Gaussian operation; use
 `apply_student_prior` for t reuse.
 
-## Direct outcome regression
+## Regression fitting
 
 ```text
 fit_regression(X, y, *, family="gaussian", covariances=None,

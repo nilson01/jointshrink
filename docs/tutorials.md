@@ -182,7 +182,7 @@ print(relative_hazard, survival_probability)
 Cox survival uses a Breslow baseline for each retained coefficient draw.
 Its intervals omit additional baseline-estimation uncertainty. Use
 `family="weibull", shape=...` for a supplied Weibull shape and a full event-time
-likelihood. See [the API](api.md#direct-outcome-regression) for categorical and
+likelihood. See [the API](api.md#regression-fitting) for categorical and
 zero-inflated or hurdle count models.
 
 ## Compare summary likelihoods

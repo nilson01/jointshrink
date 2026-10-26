@@ -14,6 +14,9 @@ SOURCE = ROOT / "docs/manual/reference.md"
 HEADER = r"""\usepackage{fvextra}
 \usepackage{float}
 \usepackage{etoolbox}
+\usepackage{needspace}
+\pretocmd{\section}{\Needspace{8\baselineskip}}{}{}
+\pretocmd{\subsection}{\Needspace{8\baselineskip}}{}{}
 \BeforeBeginEnvironment{Shaded}{\par\noindent\begin{minipage}{\linewidth}}
 \AfterEndEnvironment{Shaded}{\end{minipage}\par\smallskip}
 \usepackage{microtype}
