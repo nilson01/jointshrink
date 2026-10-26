@@ -1,0 +1,33 @@
+site_name: JointShrink
+site_url: https://nilson01.github.io/jointshrink/
+site_description: Joint Bayesian shrinkage for effect summaries and selected regression models in Python.
+repo_url: https://github.com/nilson01/jointshrink
+edit_uri: ''
+docs_dir: docs
+site_dir: site
+use_directory_urls: true
+theme:
+  name: readthedocs
+  custom_dir: overrides
+plugins:
+  - search
+markdown_extensions:
+  - tables
+  - attr_list
+  - fenced_code
+  - pymdownx.arithmatex:
+      generic: true
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
+nav:
+  - Start here: index.md
+  - Installation: installation.md
+  - Tutorials: tutorials.md
+  - API by task: api.md
+  - Methods and limits: methods.md
+  - Numerical reference checks: reference-checks.md
+  - Reference manual:
+      - Read online: manual/reference.md
+      - Download PDF: manual/jointshrink-reference.pdf
+  - Common questions: faq.md
+  - Development: development.md

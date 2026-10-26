@@ -1,0 +1,11 @@
+name: Bug report
+description: Report an error with a small reproducible example.
+body:
+  - type: textarea
+    id: example
+    attributes: {label: Example and observed result, description: Include the smallest example that shows the problem. Remove private data.}
+    validations: {required: true}
+  - type: textarea
+    id: environment
+    attributes: {label: Environment, description: JointShrink version, Python version and operating system.}
+    validations: {required: true}

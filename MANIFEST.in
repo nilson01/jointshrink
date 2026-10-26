@@ -1,0 +1,6 @@
+include README.md LICENSE NOTICE.md CITATION.cff mkdocs.yml
+recursive-include docs *.md *.png *.pdf *.csv *.json
+recursive-include overrides *.html
+recursive-include examples *.py
+recursive-include tests *.py *.json
+recursive-include tools *.py *.R *.txt

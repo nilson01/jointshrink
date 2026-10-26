@@ -1,0 +1,76 @@
+name: Package checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: package-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  wheel:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {label: Minimum dependencies, os: ubuntu-latest, python: '3.10', minimum: true}
+          - {label: Current Python, os: ubuntu-latest, python: '3.14', minimum: false}
+          - {label: Windows, os: windows-latest, python: '3.13', minimum: false}
+    env:
+      MPLBACKEND: Agg
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - name: Install build tools
+        run: python -m pip install build ruff pytest pypdf==6.19.0
+      - name: Check lint and build distributions
+        run: |
+          python tools/check_public.py
+          python -m ruff check src tests examples tools/*.py
+          python -m build
+      - name: Install minimum dependencies
+        if: matrix.minimum
+        run: python -m pip install numpy==1.24.4 scipy==1.11.4 matplotlib==3.7.5 pandas==2.0.3
+      - name: Install wheel and run from outside checkout
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, platform, shutil, subprocess, sys
+          import xml.etree.ElementTree as ET
+          root = pathlib.Path.cwd()
+          wheel = next((root / 'dist').glob('*.whl'))
+          subprocess.run([sys.executable, '-m', 'pip', 'install', str(wheel) + '[plot,table]'], check=True)
+          target = pathlib.Path(os.environ['RUNNER_TEMP']) / 'jointshrink-installed-check'
+          target.mkdir(exist_ok=False)
+          shutil.copytree(root / 'tests', target / 'tests')
+          shutil.copytree(root / 'tools', target / 'tools')
+          os.chdir(target)
+          subprocess.run([sys.executable, '-c', 'import jointshrink, pathlib; p=pathlib.Path(jointshrink.__file__).resolve(); print(p); assert '+repr(str(root))+' not in str(p)'], check=True)
+          receipt = dict(python=sys.version, platform=platform.platform(), wheel_sha256=hashlib.sha256(wheel.read_bytes()).hexdigest(), commit=os.environ['GITHUB_SHA'])
+          (target / 'environment.json').write_text(json.dumps(receipt, indent=2))
+          print(json.dumps(receipt))
+          subprocess.run([sys.executable, '-m', 'pytest', '-q', 'tests', '--junitxml=results.xml'], check=True)
+          suites = ET.parse('results.xml').getroot().findall('testsuite')
+          assert sum(int(s.attrib['tests']) for s in suites) >= 323
+          assert all(int(s.attrib.get(k, 0)) == 0 for s in suites for k in ('errors', 'failures', 'skipped'))
+      - name: Save installed-check evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: installed-checks-${{ runner.os }}-${{ matrix.python }}
+          path: |
+            ${{ runner.temp }}/jointshrink-installed-check/results.xml
+            ${{ runner.temp }}/jointshrink-installed-check/environment.json
+          if-no-files-found: ignore
+          retention-days: 7

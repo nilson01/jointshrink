@@ -1,0 +1,7 @@
+name: Feature request
+description: Describe an analysis that the package does not support.
+body:
+  - type: textarea
+    id: analysis
+    attributes: {label: Analysis and proposed behavior}
+    validations: {required: true}
