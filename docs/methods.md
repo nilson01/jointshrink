@@ -2,7 +2,7 @@
 
 ## Gaussian summary model
 
-Let $b_{jr}$ be effect $j$ in condition $r$, and let $\widehat b_{jr}$ and $\widehat s_{jr}$ be its estimate and standard error. Rows $b_j$ contain $R$ conditions. Following equations (2)–(4) of [Urbut et al. (2019)](https://doi.org/10.1038/s41588-018-0268-8),
+Let $b_{jr}$ be effect $j$ in condition $r$, and let $\widehat b_{jr}$ and $\widehat s_{jr}$ be its estimate and standard error. The vector $b_j$ contains the true effects in $R$ conditions. Following equations (2)–(4) of [Urbut et al. (2019)](https://doi.org/10.1038/s41588-018-0268-8),
 
 $$
 p(\widehat b_j\mid b_j,V_j)=N_R(\widehat b_j;b_j,V_j),
@@ -13,7 +13,7 @@ p(b_j\mid\pi,U)=\sum_{k=1}^{K}\sum_{l=1}^{L}\pi_{k,l}
 N_R(b_j;0,\omega_l U_k).
 $$
 
-Here, $N_R$ denotes an $R$-dimensional normal density, $V_j$ is the observation-error covariance, $U_k$ describes an effect-sharing pattern, $\omega_l$ controls its size, and $\pi_{k,l}$ is a mixture proportion. The proportions are nonnegative and sum to one. Consequently,
+Here, $N_R$ denotes an $R$-dimensional normal distribution (a density when its covariance is positive definite), $V_j$ is the observation-error covariance, $U_k$ describes an effect-sharing pattern, $\omega_l$ multiplies its covariance, and $\pi_{k,l}$ is a mixture proportion. The proportions are nonnegative and sum to one. The covariance patterns are positive semidefinite (PSD). Consequently,
 
 $$
 p(\widehat b_j\mid\pi,U,V_j)=\sum_{k=1}^{K}\sum_{l=1}^{L}\pi_{k,l}
@@ -24,7 +24,7 @@ Observation-error matrices must be positive definite. Prior patterns may be sing
 
 ## Effect scales and observation errors
 
-`alpha=0` fits exchangeable effects (EE), using the supplied effect units. `alpha=1` fits exchangeable Z scores (EZ), dividing each estimate by its standard error before fitting. Posterior summaries are returned in the original effect units. Original-scale log densities include the transformation Jacobian for observed coordinates.
+`alpha=0` fits exchangeable effects (EE): the common prior describes effects in their original units, independently of the supplied standard errors. `alpha=1` fits exchangeable Z scores (EZ): the common prior instead describes effects divided by their standard errors. EZ fitting divides both the estimates and their sampling errors by those standard errors. Posterior summaries are returned in the original effect units. Original-scale log densities include the transformation Jacobian for observed coordinates.
 
 With supplied standard errors and error correlation $C$, the model uses $V_j=S_j C S_j$, where $S_j$ has diagonal entries $\widehat s_{jr}$. `error_covariance` supplies $V_j$ directly and replaces both standard errors and correlation inputs. `estimate_null_correlation` estimates correlation from complete rows with all absolute Z scores below a threshold; selection can bias this estimate.
 
@@ -32,7 +32,7 @@ Missing effect estimates use `NaN`. Their standard errors remain required, inclu
 
 ## Covariance learning and scales
 
-Canonical patterns describe independent, condition-specific, equal and positively correlated effects. Principal component analysis (PCA) supplies candidate directions from strong rows. Its default uses an uncentered singular value decomposition (SVD) of working effect estimates, following the R helper. Centered Z-score PCA requires `alpha=1` and `center=True`.
+Canonical patterns describe effects that, within a Gaussian component, are uncorrelated, nonzero in one condition, equal across conditions, or positively correlated. A mixture of diagonal-covariance components need not make the effects marginally independent. Principal component analysis (PCA) supplies candidate directions from strong rows. Its default uses an uncentered singular value decomposition (SVD) of working effect estimates, following the R helper. Centered Z-score PCA requires `alpha=1` and `center=True`.
 
 Extreme deconvolution fits a zero-mean Gaussian mixture while accounting for observation error, following the noisy-mixture approach used by [Urbut et al. (2019)](https://doi.org/10.1038/s41588-018-0268-8). The algorithm can have local optima. An exactly singular start cannot expand its support under unconstrained expectation–maximization (EM) updates. `ridge` sets an explicit eigenvalue floor; `rank` limits component rank. Projected proposals are accepted only when the observed likelihood does not decrease. A rejected proposal and an iteration limit are reported separately from convergence.
 
@@ -51,7 +51,7 @@ $$
 \Pr(b_{jr}\geq0\mid\widehat b_j)\}.
 $$
 
-The local false sign rate includes zero mass in either possible sign error. `joint_null_probability` concerns the entire row being zero. These probabilities depend on the observation model and fitted prior.
+The local false sign rate includes zero mass in either possible sign error. `lfdr` is the marginal posterior probability of an exact zero. `joint_null_probability` concerns the entire row being zero. The displayed probabilities hold fitted prior parameters fixed. These probabilities depend on the observation model and fitted prior.
 
 ## Memory and supported workflow
 

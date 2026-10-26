@@ -24,7 +24,7 @@ Returns `MashData`. `effects` has shape `(rows, conditions)` with at least two c
 | `cov_ed(data, initial, *, subset=None, maxiter=200, tol=1e-6, ridge=0, rank=None)` | Error-aware covariance refinement; returns `CovarianceFit` |
 | `make_scale_grid(data, *, factor=sqrt(2))` | Positive standard-deviation grid |
 | `expand_covariances(patterns, scales, *, point_mass=True, normalize=True)` | Pattern × squared-scale combinations, deduplicated |
-| `estimate_null_correlation(data, *, z_threshold=2, minimum_rows=None, regularization=0.05)` | Centered nullish Z-score correlation shrunk toward identity |
+| `estimate_null_correlation(data, *, z_threshold=2, minimum_rows=None, regularization=0.05)` | Correlation of centered Z scores in rows below the absolute-Z threshold, shrunk toward identity |
 
 `CovarianceFit` exposes `covariances`, `weights` and `diagnostics`. Its likelihood history and stopping reason distinguish convergence from an iteration limit or rejected proposal. `CorrelationEstimate` exposes `correlation`, selected `row_indices` and `diagnostics`.
 
@@ -56,7 +56,7 @@ A reused prior requires the same condition order, number of conditions and EE/EZ
 | --- | --- |
 | `posterior_mean`, `posterior_sd` | `(n,d)` |
 | `posterior_covariance` | `(n,d,d)` |
-| `lfdr`, `lfsr` | `(n,d)`; exact-zero and local false sign probabilities |
+| `lfdr`, `lfsr` | `(n,d)`; marginal posterior null probabilities and local false sign rates |
 | `probability_negative`, `probability_positive` | Strictly negative/positive posterior probability |
 | `joint_null_probability` | `(n,)`; all conditions exactly zero |
 | `row_names`, `condition_names`, `observed` | Labels and observed-coordinate mask |
@@ -189,7 +189,7 @@ samples rather than analytic Gaussian mixtures. Their `lfdr`, `lfsr` and
 | Property or method | Meaning |
 | --- | --- |
 | `draws`, `intercept_draws`, `weight_draws` | Retained coefficient, intercept and mixture-weight samples |
-| `random_draws`, `random_scale_draws` | Group-effect and common SD samples |
+| `random_draws`, `random_scale_draws` | Group-effect draws and retained common scale multipliers |
 | `posterior_mean`, `posterior_sd`, `posterior_covariance` | Coefficient summaries; `coefficients` aliases the mean |
 | `interval(level=0.95)`, `quantile(probability)`, `cdf(value)` | Marginal empirical posterior summaries |
 | `sample(size=1, seed=None)` | Resample retained coefficient draws |

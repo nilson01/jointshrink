@@ -57,7 +57,7 @@ print(result.format_summary())
 
 ## Fit supplied patterns
 
-Rows contain effects and columns contain conditions. The following values are constructed examples.
+Each row contains estimates of one effect across conditions; columns identify conditions. The following values are constructed examples.
 
 ```python
 import numpy as np
@@ -123,7 +123,7 @@ for batch in restored.iter_apply(new_data, batch_size=128):
     print(batch.posterior_mean)
 ```
 
-A missing effect uses `NaN`; its standard error must still be finite and positive. Inference uses observed conditions exactly. The unobserved effect is inferred from the fitted prior and the observed effects. Retain the same condition order and EE/EZ scale; reuse holds patterns and weights fixed.
+A missing effect estimate uses `NaN`; its standard error must still be finite and positive. The likelihood uses only the observed estimates and their sampling-covariance submatrix. The unobserved effect is inferred from the fitted prior and the observed effects. Retain the same condition order and EE/EZ scale; reuse holds patterns and weights fixed.
 
 ## Fit native Student-t errors
 
@@ -185,7 +185,7 @@ Each fit uses eight constructed observations, one predictor and two chains with 
 
 ## Gaussian summary model
 
-Let $b_{jr}$ be effect $j$ in condition $r$, and let $\widehat b_{jr}$ and $\widehat s_{jr}$ be its estimate and standard error. Rows $b_j$ contain $R$ conditions. Following equations (2)–(4) of [Urbut et al. (2019)](https://doi.org/10.1038/s41588-018-0268-8),
+Let $b_{jr}$ be effect $j$ in condition $r$, and let $\widehat b_{jr}$ and $\widehat s_{jr}$ be its estimate and standard error. The vector $b_j$ contains the true effects in $R$ conditions. Following equations (2)–(4) of [Urbut et al. (2019)](https://doi.org/10.1038/s41588-018-0268-8),
 
 $$
 p(\widehat b_j\mid b_j,V_j)=N_R(\widehat b_j;b_j,V_j),
@@ -196,7 +196,7 @@ p(b_j\mid\pi,U)=\sum_{k=1}^{K}\sum_{l=1}^{L}\pi_{k,l}
 N_R(b_j;0,\omega_l U_k).
 $$
 
-Here, $N_R$ denotes an $R$-dimensional normal density, $V_j$ is the observation-error covariance, $U_k$ describes an effect-sharing pattern, $\omega_l$ controls its size, and $\pi_{k,l}$ is a mixture proportion. The proportions are nonnegative and sum to one. Consequently,
+Here, $N_R$ denotes an $R$-dimensional normal distribution (a density when its covariance is positive definite), $V_j$ is the observation-error covariance, $U_k$ describes an effect-sharing pattern, $\omega_l$ multiplies its covariance, and $\pi_{k,l}$ is a mixture proportion. The proportions are nonnegative and sum to one. The covariance patterns are positive semidefinite (PSD). Consequently,
 
 $$
 p(\widehat b_j\mid\pi,U,V_j)=\sum_{k=1}^{K}\sum_{l=1}^{L}\pi_{k,l}
@@ -207,7 +207,7 @@ Observation-error matrices must be positive definite. Prior patterns may be sing
 
 ## Effect scales and observation errors
 
-`alpha=0` fits exchangeable effects (EE), using the supplied effect units. `alpha=1` fits exchangeable Z scores (EZ), dividing each estimate by its standard error before fitting. Posterior summaries are returned in the original effect units. Original-scale log densities include the transformation Jacobian for observed coordinates.
+`alpha=0` fits exchangeable effects (EE): the common prior describes effects in their original units, independently of the supplied standard errors. `alpha=1` fits exchangeable Z scores (EZ): the common prior instead describes effects divided by their standard errors. EZ fitting divides both the estimates and their sampling errors by those standard errors. Posterior summaries are returned in the original effect units. Original-scale log densities include the transformation Jacobian for observed coordinates.
 
 With supplied standard errors and error correlation $C$, the model uses $V_j=S_j C S_j$, where $S_j$ has diagonal entries $\widehat s_{jr}$. `error_covariance` supplies $V_j$ directly and replaces both standard errors and correlation inputs. `estimate_null_correlation` estimates correlation from complete rows with all absolute Z scores below a threshold; selection can bias this estimate.
 
@@ -215,7 +215,7 @@ Missing effect estimates use `NaN`. Their standard errors remain required, inclu
 
 ## Covariance learning and scales
 
-Canonical patterns describe independent, condition-specific, equal and positively correlated effects. Principal component analysis (PCA) supplies candidate directions from strong rows. Its default uses an uncentered singular value decomposition (SVD) of working effect estimates, following the R helper. Centered Z-score PCA requires `alpha=1` and `center=True`.
+Canonical patterns describe effects that, within a Gaussian component, are uncorrelated, nonzero in one condition, equal across conditions, or positively correlated. A mixture of diagonal-covariance components need not make the effects marginally independent. Principal component analysis (PCA) supplies candidate directions from strong rows. Its default uses an uncentered singular value decomposition (SVD) of working effect estimates, following the R helper. Centered Z-score PCA requires `alpha=1` and `center=True`.
 
 Extreme deconvolution fits a zero-mean Gaussian mixture while accounting for observation error, following the noisy-mixture approach used by [Urbut et al. (2019)](https://doi.org/10.1038/s41588-018-0268-8). The algorithm can have local optima. An exactly singular start cannot expand its support under unconstrained expectation–maximization (EM) updates. `ridge` sets an explicit eigenvalue floor; `rank` limits component rank. Projected proposals are accepted only when the observed likelihood does not decrease. A rejected proposal and an iteration limit are reported separately from convergence.
 
@@ -234,7 +234,7 @@ $$
 \Pr(b_{jr}\geq0\mid\widehat b_j)\}.
 $$
 
-The local false sign rate includes zero mass in either possible sign error. `joint_null_probability` concerns the entire row being zero. These probabilities depend on the observation model and fitted prior.
+The local false sign rate includes zero mass in either possible sign error. `lfdr` is the marginal posterior probability of an exact zero. `joint_null_probability` concerns the entire row being zero. The displayed probabilities hold fitted prior parameters fixed. These probabilities depend on the observation model and fitted prior.
 
 ## Memory and supported workflow
 
@@ -244,23 +244,23 @@ Retain the original condition order when reusing a prior: columns are matched po
 
 ## Native Student-t summary model
 
-For estimates with heavier-tailed errors, the native $t$ route retains the Gaussian mixture prior but changes the observation model. Write $T_j$ for its positive-definite error **scale matrix**, and let $\nu_j>0$ be the supplied degrees of freedom. The implementation uses
+For estimates with heavier-tailed errors, the native $t$ route retains the Gaussian mixture prior but changes the observation model. Here $V_j$ denotes a positive-definite error **scale matrix**, rather than the Gaussian sampling covariance. Let $\nu_j>0$ be the supplied degrees of freedom. The implementation uses
 
 $$
 \lambda_j\sim\mathrm{Gamma}(\nu_j/2,\mathrm{rate}=\nu_j/2),
 \qquad
-\widehat b_j\mid b_j,\lambda_j\sim N_R(b_j,T_j/\lambda_j).
+\widehat b_j\mid b_j,\lambda_j\sim N_R(b_j,V_j/\lambda_j).
 $$
 
-One precision $\lambda_j$ is shared across a row's observed conditions. This gives elliptical multivariate $t$ errors, rather than independent univariate $t$ errors. The scale convention follows [SciPy's multivariate $t$ definition](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.multivariate_t.html). The error covariance is $\nu_j T_j/(\nu_j-2)$ only for $\nu_j>2$; it does not exist for $\nu_j\leq2$.
+One precision $\lambda_j$ is shared across a row's observed conditions. This gives elliptical multivariate $t$ errors, rather than independent univariate $t$ errors. The scale convention follows [SciPy's multivariate $t$ definition](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.multivariate_t.html). The error covariance is $\nu_j V_j/(\nu_j-2)$ only for $\nu_j>2$; it does not exist for $\nu_j\leq2$.
 
-For this route, `error_covariance` supplies $T_j$, and `standard_errors` supplies its diagonal square roots. EE/EZ transformations retain the same original-scale Jacobian as Gaussian MASH. Missing conditions use the observed block of $T_j$.
+For this route, `error_covariance` supplies $V_j$, and `standard_errors` supplies its diagonal square roots when an explicit scale matrix is not supplied. These inputs are not error standard deviations under a finite-degree-of-freedom $t$ likelihood. EE/EZ transformations retain the same original-scale Jacobian as Gaussian MASH. Missing conditions use the observed block of $V_j$.
 
-Integration over log precision produces a finite Gaussian-mixture approximation to the posterior. Increasing quadrature orders checks marginal log densities, first and second posterior moments, and CDFs at zero. Inspect `quadrature_converged` and `quadrature_relative_change`; an unmet tolerance produces a warning. These checks are not rigorous error bounds for every posterior quantile. Uncertainty remains conditional on supplied $T_j,\nu_j$ and fitted prior parameters.
+Integration over log precision produces a finite Gaussian-mixture approximation to the posterior. Increasing quadrature orders checks marginal log densities, first and second posterior moments, and CDFs at zero. Inspect `quadrature_converged` and `quadrature_relative_change`; an unmet tolerance produces a warning. These checks are not rigorous error bounds for every posterior quantile. Uncertainty remains conditional on supplied $V_j,\nu_j$ and fitted prior parameters.
 
 ## Direct regression model
 
-Direct regression starts from outcomes, rather than estimates from an earlier analysis. Let $X$ contain $n$ observations and $p$ predictors, and let $D$ be the number of linear predictors needed by the likelihood. The coefficient row $B_j\in\mathbb R^D$ shares a mixture prior across predictors:
+Direct regression starts from outcomes, rather than estimates from an earlier analysis. Let $X$ contain $n$ observations and $p$ predictors, and let $D$ be the number of linear predictors needed by the likelihood. Each coefficient row $B_j\in\mathbb R^D$ has the same mixture prior. The covariance components describe relationships among its $D$ linear-predictor coefficients; mixture weights are shared across the $p$ predictor rows:
 
 $$
 B_j\mid c_j=k\sim N_D(0,\Sigma_k),\qquad
@@ -283,7 +283,7 @@ Group terms are absent when `groups=None`. Intercepts have independent $N(0,5^2)
 
 Except for the single categorical or survival outcome, `y` can have shape `(n,R)`. Its columns are conditionally independent given their predictors and group effects. Shared coefficient or group priors do not provide a general residual covariance model. Missing raw outcomes and predictors are rejected.
 
-Let $\mathrm{logit}^{-1}(x)=1/(1+e^{-x})$. In count models, $e_{ir}>0$ is supplied exposure and $\mu_{ir}=e_{ir}\exp(\eta_{ir})$.
+Let $\mathrm{logit}^{-1}(x)=1/(1+e^{-x})$. For the negative binomial, NB2 denotes the variance convention given below. In count models, $e_{ir}>0$ is supplied exposure and $\mu_{ir}=e_{ir}\exp(\eta_{ir})$ is the mean of the underlying Poisson or NB2 count component. In zero-inflated and hurdle models, the overall response mean differs from $\mu_{ir}$.
 
 | `family` | Likelihood and supplied quantities |
 | --- | --- |
@@ -311,11 +311,11 @@ $$
 \end{aligned}
 $$
 
-Thus the zero-inflated mean is $(1-\rho)\mu$, while the hurdle mean is $(1-\rho)\mu/[1-f(0)]$. The zero logit has the same direction in both models: larger values increase zero probability. By default these fits use independent coefficient patterns across the count and zero predictors; supplied patterns may express a chosen relationship.
+Thus the zero-inflated mean is $(1-\rho)\mu$, while the hurdle mean is $(1-\rho)\mu/[1-f(0)]$. The zero logit has the same direction in both models: larger values increase zero probability. By default these fits use an identity covariance pattern for coefficients across the count and zero predictors; supplied patterns may express a chosen relationship.
 
 ### Survival and group effects
 
-Both survival families support right censoring and delayed entry with `0 <= entry < time`. The Cox risk set at event time $t$ uses $\mathrm{entry}_i<t\leq\mathrm{time}_i$, with Breslow handling of tied events. The coefficient target is a partial-likelihood posterior. Absolute survival uses a draw-specific Breslow baseline estimated from the training data; it propagates coefficient uncertainty but does not integrate separate baseline uncertainty. No-event data cannot supply an absolute baseline. [The statsmodels PHReg reference](https://www.statsmodels.org/stable/generated/statsmodels.duration.hazard_regression.PHReg.html) describes the corresponding right-censoring, entry and ties conventions. Weibull absolute survival instead depends on the supplied shape and parametric baseline. Competing risks, interval censoring and time-varying covariates are not included.
+Both survival families support right censoring and delayed entry with `0 <= entry < time`. The Cox risk set at event time $t$ uses $\mathrm{entry}_i<t\leq\mathrm{time}_i$, with Breslow handling of tied events. The coefficient posterior is proportional to the Cox partial likelihood times the specified priors; it does not come from a full event-time likelihood. Survival inference requires non-informative censoring conditional on the modeled predictors and group effects, and appropriate adjustment for delayed entry. Absolute survival uses a draw-specific Breslow baseline estimated from the training data; it propagates coefficient uncertainty but does not integrate separate baseline uncertainty. No-event data cannot supply an absolute baseline. [The statsmodels PHReg reference](https://www.statsmodels.org/stable/generated/statsmodels.duration.hazard_regression.PHReg.html) describes the corresponding right-censoring, entry and ties conventions. Weibull absolute survival instead depends on the supplied shape and parametric baseline. Competing risks, interval censoring and time-varying covariates are not included.
 
 `groups` supplies one nonempty string label per observation. Without `random_design`, each group has a random intercept. A supplied `(n,Q)` design allows random slopes. Flattening each group's `(Q,D)` effects in row order gives
 
@@ -323,17 +323,17 @@ $$
 \mathrm{vec}(u_g)\mid\tau^2\sim N_{QD}(0,\tau^2 A).
 $$
 
-`random_covariance` supplies the fixed positive-definite shape matrix $A$ of dimension `(Q*D,Q*D)`. The default is identity. `random_scale` is the SD $\tau$; with `estimate_random_scale=True`, $\tau^2$ has an inverse-gamma prior with shape 2 and scale 1. Otherwise it stays fixed. This estimates one common scale, not an unrestricted random-effect covariance or general within-group residual correlation.
+`random_covariance` supplies the fixed positive-definite shape matrix $A$ of dimension `(Q*D,Q*D)`. The default is identity. `random_scale` supplies the common multiplier $\tau$; marginal group-effect SDs also depend on the diagonal of $A$. With `estimate_random_scale=True`, it sets the initial value and $\tau^2$ has an inverse-gamma prior with shape 2 and scale 1. Otherwise it stays fixed. This estimates one common scale, not an unrestricted random-effect covariance or general within-group residual correlation.
 
 ### Sampling and diagnostics
 
-Regression combines joint component/coefficient proposals from the current prior, elliptical slice updates within Gaussian components, and Dirichlet updates for mixture weights. Elliptical slice sampling follows [Murray, Adams and MacKay (2010)](https://proceedings.mlr.press/v9/murray10a.html). Component-changing proposals allow transitions between zero, singular and full-rank prior components. A failed slice-bracket search raises an error rather than accepting an approximate update.
+Regression uses Markov chain Monte Carlo (MCMC). It combines joint component/coefficient proposals from the current prior, elliptical slice updates within Gaussian components, and Dirichlet updates for mixture weights. Elliptical slice sampling follows [Murray, Adams and MacKay (2010)](https://proceedings.mlr.press/v9/murray10a.html). Component-changing proposals allow transitions between zero, singular and full-rank prior components. A failed slice-bracket search raises an error rather than accepting an approximate update.
 
 Inspect coefficient traces, `split_rhat`, `effective_sample_size`, `constant_coordinates`, `prior_proposal_acceptance` and `component_switches`. The effective sample size is an autocorrelation estimate, not a rank-normalized bulk effective sample size. Constant coordinates have undefined diagnostics; a chain stuck at zero is not evidence of convergence. The coefficient diagnostics do not certify mixing for every group effect or mixture weight. Successful execution and multiple chains do not establish convergence or calibration.
 
 # API by task
 
-All functions below are imported from `jointshrink`. Summary arrays use effects × conditions; regression uses observations × predictors.
+All functions below are imported from `jointshrink`. Summary arrays use effects × conditions, with `(n,d)` denoting rows × conditions in API shapes. Regression uses observations × predictors; $D$ denotes its number of linear predictors.
 
 ## Data
 
@@ -357,7 +357,7 @@ Returns `MashData`. `effects` has shape `(rows, conditions)` with at least two c
 | `cov_ed(data, initial, *, subset=None, maxiter=200, tol=1e-6, ridge=0, rank=None)` | Error-aware covariance refinement; returns `CovarianceFit` |
 | `make_scale_grid(data, *, factor=sqrt(2))` | Positive standard-deviation grid |
 | `expand_covariances(patterns, scales, *, point_mass=True, normalize=True)` | Pattern × squared-scale combinations, deduplicated |
-| `estimate_null_correlation(data, *, z_threshold=2, minimum_rows=None, regularization=0.05)` | Centered nullish Z-score correlation shrunk toward identity |
+| `estimate_null_correlation(data, *, z_threshold=2, minimum_rows=None, regularization=0.05)` | Correlation of centered Z scores in rows below the absolute-Z threshold, shrunk toward identity |
 
 `CovarianceFit` exposes `covariances`, `weights` and `diagnostics`. Its likelihood history and stopping reason distinguish convergence from an iteration limit or rejected proposal. `CorrelationEstimate` exposes `correlation`, selected `row_indices` and `diagnostics`.
 
@@ -389,7 +389,7 @@ A reused prior requires the same condition order, number of conditions and EE/EZ
 | --- | --- |
 | `posterior_mean`, `posterior_sd` | `(n,d)` |
 | `posterior_covariance` | `(n,d,d)` |
-| `lfdr`, `lfsr` | `(n,d)`; exact-zero and local false sign probabilities |
+| `lfdr`, `lfsr` | `(n,d)`; marginal posterior null probabilities and local false sign rates |
 | `probability_negative`, `probability_positive` | Strictly negative/positive posterior probability |
 | `joint_null_probability` | `(n,)`; all conditions exactly zero |
 | `row_names`, `condition_names`, `observed` | Labels and observed-coordinate mask |
@@ -423,7 +423,7 @@ apply_student_prior(data, prior, df, *, quadrature_order=64,
 
 `df` is required: finite positive scalar or one value per effect row. Infinite df is not accepted; use Gaussian `fit` for Gaussian errors. Quadrature orders are integers of at least four, with maximum no smaller than the starting order. A single unrefined order reports convergence as unverified.
 
-`StudentTResult` inherits the posterior methods above and adds `data`, `prior`, `df`, `log_likelihood` and diagnostics. Its Gaussian component prior can be saved independently. Use `result.shrink(new_data, df=...)` for native $t$ reuse; `prior.apply` would use a Gaussian likelihood. Quadrature nodes increase the number of stored posterior components, so fewer rows or patterns may be needed within the 256 MiB component guard.
+`StudentTResult` inherits the posterior methods above and adds `data`, `prior`, `df`, `log_likelihood` and diagnostics. Its Gaussian-mixture effect prior can be saved independently. Use `result.shrink(new_data, df=...)` for native $t$ reuse; `prior.apply` would use a Gaussian likelihood. Quadrature nodes increase the number of stored posterior components, so fewer rows or patterns may be needed within the 256 MiB component guard.
 
 ## Direct regression fitting
 
@@ -457,9 +457,9 @@ Unlike summary-pattern fitting, regression does not normalize supplied covarianc
 
 ## Regression results and prediction
 
-`RegressionResult` extends `DrawResult`. Its main arrays are `draws` with shape `(chains,draws,p,D)`, `intercept_draws` `(chains,draws,D)`, `weight_draws` `(chains,draws,K)` and `random_draws` `(chains,draws,groups,Q,D)`. `random_scale_draws` stores group SDs. `posterior_mean` and `coefficients` contain the coefficient means; `intercept` gives intercept means.
+`RegressionResult` extends `DrawResult`. Its main arrays are `draws` with shape `(chains,draws,p,D)`, `intercept_draws` `(chains,draws,D)`, `weight_draws` `(chains,draws,K)` and `random_draws` `(chains,draws,groups,Q,D)`. `random_scale_draws` stores the retained common multiplier $\tau$; the supplied covariance shape determines individual group-effect SDs. `posterior_mean` and `coefficients` contain the coefficient means; `intercept` gives intercept means.
 
-`DrawResult` supplies `posterior_sd`, `posterior_covariance`, `lfdr`, `lfsr`, `joint_null_probability`, `cdf`, `quantile`, `interval`, `sample`, `contrast`, `summary`, `format_summary`, `to_records` and `to_dataframe`. These summaries are empirical calculations from retained draws. `sample` resamples retained draws; it does not run more MCMC. Contrasts combine the last, latent-predictor dimension, rather than predictor rows. `random_effect_summary(level=0.95)` returns records for group intercepts/slopes.
+`DrawResult` supplies `posterior_sd`, `posterior_covariance`, `lfdr`, `lfsr`, `joint_null_probability`, `cdf`, `quantile`, `interval`, `sample`, `contrast`, `summary`, `format_summary`, `to_records` and `to_dataframe`. These summaries are Monte Carlo estimates from retained posterior draws. `sample` resamples retained draws; it does not run more MCMC. Contrasts combine the last, latent-predictor dimension, rather than predictor rows. `random_effect_summary(level=0.95)` returns records for group intercepts/slopes.
 
 ```text
 result.predict(X, *, scale="response", groups=None, random_design=None,
@@ -531,7 +531,7 @@ The reference export records package versions and library origin. The checker us
 | Covariance learning | Independent analytic checks cover noisy-mixture updates; an installed-R extreme-deconvolution comparison is not claimed |
 | Uncertainty | Numerical agreement does not establish repeated-dataset coverage or include all hyperparameter uncertainty |
 
-R `mashr` finite-degrees-of-freedom inputs use normal-score conversion. JointShrink's native $t$ likelihood and direct-regression extensions are separate methods; the Gaussian R comparisons do not validate them. Independent finite-case checks cover $t$ convolution, family likelihoods, analytic regression posteriors and prediction behavior. Repeated-dataset coverage, general sampler mixing and full paper reproduction are not established by those checks.
+R `mashr` finite-degrees-of-freedom inputs use normal-score conversion. JointShrink's native $t$ likelihood and direct-regression extensions are separate methods; the Gaussian R comparisons do not validate them. Independent finite-case checks cover $t$ convolution, outcome densities and masses, Cox partial likelihood, analytic regression posteriors and prediction behavior. Repeated-dataset coverage, general sampler mixing and full paper reproduction are not established by those checks.
 
 # Common questions
 
