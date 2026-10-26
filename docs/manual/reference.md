@@ -19,7 +19,17 @@ The direct-regression extensions use a different posterior model from Gaussian M
 
 # Installation
 
-Python 3.10 or later is required. Install from GitHub or a local checkout.
+Python 3.10 or later is required.
+
+```shell
+pip install jointshrink
+```
+
+For Matplotlib plots and pandas tables:
+
+```shell
+pip install "jointshrink[plot,table]"
+```
 
 ## From GitHub
 
@@ -33,12 +43,6 @@ Run this command in the directory containing `pyproject.toml`:
 
 ```shell
 python -m pip install .
-```
-
-For plots and pandas tables, install the extras from a local checkout:
-
-```shell
-python -m pip install ".[plot,table]"
 ```
 
 NumPy and SciPy are required. Plots require Matplotlib; `to_dataframe()` requires pandas. Analysis does not require R.

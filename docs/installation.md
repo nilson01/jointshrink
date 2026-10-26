@@ -1,6 +1,16 @@
 # Installation
 
-Python 3.10 or later is required. Use either source-install route below.
+Python 3.10 or later is required.
+
+```shell
+pip install jointshrink
+```
+
+For Matplotlib plots and pandas tables:
+
+```shell
+pip install "jointshrink[plot,table]"
+```
 
 ## From GitHub
 
@@ -14,12 +24,6 @@ Run this command in the directory containing `pyproject.toml`:
 
 ```shell
 python -m pip install .
-```
-
-For plots and pandas tables, install the extras from a local checkout:
-
-```shell
-python -m pip install ".[plot,table]"
 ```
 
 NumPy and SciPy are required dependencies. Matplotlib is required only for plots; pandas is required for `to_dataframe()` tables. No R installation is needed for analysis.

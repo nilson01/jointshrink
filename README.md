@@ -8,7 +8,17 @@ workflow. Fitting uses NumPy and SciPy and does not require R.
 
 ## Installation
 
-Install from GitHub:
+```sh
+pip install jointshrink
+```
+
+For Matplotlib plots and pandas tables:
+
+```sh
+pip install "jointshrink[plot,table]"
+```
+
+From GitHub:
 
 ```sh
 pip install "git+https://github.com/nilson01/jointshrink.git"
@@ -20,7 +30,7 @@ From a local checkout:
 pip install .
 ```
 
-Matplotlib plots and pandas tables use the `plot` and `table` extras.
+Python 3.10 or later is required.
 
 ## Fit effects across conditions
 
