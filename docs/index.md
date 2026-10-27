@@ -28,3 +28,10 @@ sampling. Numerical agreement checks do not establish interval calibration or
 convergence in every analysis. See [methods and limits](methods.md).
 
 [Installation](installation.md) · [Reference manual](manual/reference.md) · [Numerical comparisons](reference-checks.md)
+
+## Acknowledgements
+
+Computations were performed on the Arseven Computing Cluster, Department of
+Statistics, Texas A&M University.
+
+This work received no grant funding.

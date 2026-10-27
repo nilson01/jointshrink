@@ -86,3 +86,10 @@ Cite the method paper and record the JointShrink version used.
 [Numerical comparisons](https://nilson01.github.io/jointshrink/reference-checks/) describe the checked cases
 and their limits.
 See [NOTICE](https://github.com/nilson01/jointshrink/blob/main/NOTICE.md) and [LICENSE](https://github.com/nilson01/jointshrink/blob/main/LICENSE) for credit and license terms.
+
+## Acknowledgements
+
+Computations were performed on the Arseven Computing Cluster, Department of
+Statistics, Texas A&M University.
+
+This work received no grant funding.

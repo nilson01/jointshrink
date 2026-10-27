@@ -276,7 +276,6 @@ def main(output):
             "extension-summary-likelihoods": "Two line plots compare posterior means and posterior standard deviations for condition 1 as its supplied estimate varies; condition 2 is held fixed. Solid blue denotes Gaussian errors and dashed orange denotes Student-t4 errors.",
             "extension-regression-responses": "Four panels show Gaussian, binomial and Poisson conditional response curves with raw observations, followed by Weibull survival curves at three predictor values. Shaded credible bands describe conditional means or survival; a time rug distinguishes events and right censoring.",
         },
-        "scientific_visualization_credit": "Kassis, Agarwal, He, Patel and Brueckner (2026), Scientific Agent Skills: A Library of Procedural Knowledge for Research Agents, https://doi.org/10.48550/arXiv.2609.00065",
         "environment": {
             "python": platform.python_version(),
             "numpy": np.__version__,
