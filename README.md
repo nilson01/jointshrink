@@ -82,7 +82,22 @@ ordinal thresholds and Weibull shape are supplied and held fixed.
 - [Methods and limits](https://nilson01.github.io/jointshrink/methods/), [numerical reference checks](https://nilson01.github.io/jointshrink/reference-checks/).
 - [Reference manual](https://nilson01.github.io/jointshrink/manual/reference/) ([PDF](https://nilson01.github.io/jointshrink/manual/jointshrink-reference.pdf)).
 
-Cite the method paper and record the JointShrink version used.
+### Citation
+
+Chapagain, N. (2026). [JointShrink: Joint Bayesian shrinkage in Python](https://www.researchgate.net/publication/416951125_JointShrink_Joint_Bayesian_shrinkage_in_Python). Preprint.
+
+Cite the statistical methods used and record the JointShrink version.
+
+```bibtex
+@misc{chapagain2026jointshrink,
+  author = {Chapagain, Nilson},
+  title = {{JointShrink: Joint Bayesian shrinkage in Python}},
+  year = {2026},
+  howpublished = {Preprint, ResearchGate},
+  url = {https://www.researchgate.net/publication/416951125_JointShrink_Joint_Bayesian_shrinkage_in_Python}
+}
+```
+
 [Numerical comparisons](https://nilson01.github.io/jointshrink/reference-checks/) describe the checked cases
 and their limits.
 See [NOTICE](https://github.com/nilson01/jointshrink/blob/main/NOTICE.md) and [LICENSE](https://github.com/nilson01/jointshrink/blob/main/LICENSE) for credit and license terms.

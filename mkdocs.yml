@@ -30,4 +30,5 @@ nav:
       - Read online: manual/reference.md
       - Download PDF: manual/jointshrink-reference.pdf
   - Common questions: faq.md
+  - Citation: citation.md
   - Development: development.md

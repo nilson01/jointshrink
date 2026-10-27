@@ -29,6 +29,10 @@ convergence in every analysis. See [methods and limits](methods.md).
 
 [Installation](installation.md) · [Reference manual](manual/reference.md) · [Numerical comparisons](reference-checks.md)
 
+## Citation
+
+See the [package paper and BibTeX citation](citation.md).
+
 ## Acknowledgements
 
 Computations were performed on the Arseven Computing Cluster, Department of

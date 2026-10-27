@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: Please cite the method paper and record the JointShrink version used.
+message: "Please cite the package paper and the statistical methods used, and record the software version."
 title: 'JointShrink: Joint shrinkage for effect summaries and regression'
 type: software
 version: 0.1.0
@@ -10,3 +10,13 @@ authors:
     email: nchapagain@tamu.edu
 repository-code: https://github.com/nilson01/jointshrink
 license: GPL-3.0-or-later
+preferred-citation:
+  type: generic
+  title: "JointShrink: Joint Bayesian shrinkage in Python"
+  authors:
+    - family-names: Chapagain
+      given-names: Nilson
+      orcid: https://orcid.org/0000-0003-2962-2949
+  year: 2026
+  url: https://www.researchgate.net/publication/416951125_JointShrink_Joint_Bayesian_shrinkage_in_Python
+  notes: Preprint
