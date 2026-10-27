@@ -1,5 +1,10 @@
 # JointShrink
 
+[![Tests](https://github.com/nilson01/jointshrink/actions/workflows/checks.yml/badge.svg?branch=main)](https://github.com/nilson01/jointshrink/actions/workflows/checks.yml)
+[![PyPI version](https://img.shields.io/pypi/v/jointshrink?style=flat-square)](https://pypi.org/project/jointshrink/)
+[![Weekly downloads](https://img.shields.io/pypi/dw/jointshrink?style=flat-square)](https://pypistats.org/packages/jointshrink)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue?style=flat-square)](https://github.com/nilson01/jointshrink/blob/main/LICENSE)
+
 JointShrink estimates effects jointly across tissues or conditions using
 multivariate adaptive shrinkage. It learns covariance patterns from supplied
 effect estimates and their standard errors, then computes posterior summaries.
